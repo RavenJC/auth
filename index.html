@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auth Module - User Authentication</title>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Space+Mono:wght@700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        :root {
+            --bg: #0f0f14;
+            --card: #1a1a22;
+            --border: #2a2a35;
+            --accent: #6366f1;
+            --accent-glow: rgba(99, 102, 241, 0.3);
+            --green: #22c55e;
+            --red: #ef4444;
+            --text: #f1f5f9;
+            --muted: #64748b;
+        }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            padding: 2rem;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .header h1 {
+            font-family: 'Space Mono', monospace;
+            font-size: 2rem;
+            color: var(--accent);
+            margin-bottom: 0.5rem;
+        }
+
+        .header p { color: var(--muted); }
+
+        .badge {
+            display: inline-block;
+            background: var(--accent);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            margin-top: 0.5rem;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 1.5rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 1.5rem;
+        }
+
+        .card-title {
+            font-family: 'Space Mono', monospace;
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .method-badge {
+            font-size: 0.65rem;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            margin-left: auto;
+        }
+
+        .method-post { background: rgba(34, 197, 94, 0.2); color: var(--green); }
+        .method-get { background: rgba(99, 102, 241, 0.2); color: var(--accent); }
+        .method-put { background: rgba(245, 158, 11, 0.2); color: #f59e0b; }
+        .method-delete { background: rgba(239, 68, 68, 0.2); color: var(--red); }
+
+        .form-group { margin-bottom: 1rem; }
+
+        .form-label {
+            display: block;
+            font-size: 0.8rem;
+            color: var(--muted);
+            margin-bottom: 0.3rem;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text);
+            font-size: 0.95rem;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-glow);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-top: 0.5rem;
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px var(--accent-glow);
+        }
+
+        .btn-secondary {
+            background: var(--border);
+            color: var(--text);
+        }
+
+        .btn-danger {
+            background: var(--red);
+            color: white;
+        }
+
+        .response {
+            margin-top: 1rem;
+            padding: 1rem;
+            background: var(--bg);
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 0.8rem;
+            max-height: 200px;
+            overflow-y: auto;
+            display: none;
+        }
+
+        .response.success { border-left: 3px solid var(--green); }
+        .response.error { border-left: 3px solid var(--red); }
+
+        .response pre {
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        .token-display {
+            background: var(--bg);
+            padding: 0.75rem;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 0.7rem;
+            word-break: break-all;
+            margin-bottom: 1rem;
+            color: var(--green);
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: var(--bg);
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            font-size: 0.85rem;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--red);
+        }
+
+        .status-dot.online { background: var(--green); }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <h1>🔐 Auth Module</h1>
+        <p>User Authentication & Management</p>
+        <span class="badge">PORT 3001</span>
+    </header>
+
+    <div class="grid">
+        <!-- Login -->
+        <div class="card">
+            <div class="card-title">
+                Login
+                <span class="method-badge method-post">POST</span>
+            </div>
+            <div class="status-indicator">
+                <span class="status-dot" id="auth-status"></span>
+                <span id="auth-status-text">Not logged in</span>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Email</label>
+                <input type="email" class="form-input" id="login-email" placeholder="user@example.com">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Password</label>
+                <input type="password" class="form-input" id="login-password" placeholder="••••••••">
+            </div>
+            <button class="btn btn-primary" onclick="login()">Sign In</button>
+            <button class="btn btn-secondary" onclick="logout()" style="margin-top: 0.5rem;">Logout</button>
+            <div class="response" id="login-response"><pre></pre></div>
+        </div>
+
+        <!-- Register -->
+        <div class="card">
+            <div class="card-title">
+                Register
+                <span class="method-badge method-post">POST</span>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">First Name</label>
+                    <input type="text" class="form-input" id="reg-fname" placeholder="John">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Last Name</label>
+                    <input type="text" class="form-input" id="reg-lname" placeholder="Doe">
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Email</label>
+                <input type="email" class="form-input" id="reg-email" placeholder="user@example.com">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Password</label>
+                <input type="password" class="form-input" id="reg-password" placeholder="••••••••">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Phone (optional)</label>
+                <input type="tel" class="form-input" id="reg-phone" placeholder="+1234567890">
+            </div>
+            <button class="btn btn-primary" onclick="register()">Create Account</button>
+            <div class="response" id="register-response"><pre></pre></div>
+        </div>
+
+        <!-- Profile -->
+        <div class="card">
+            <div class="card-title">
+                Get Profile
+                <span class="method-badge method-get">GET</span>
+            </div>
+            <p style="color: var(--muted); font-size: 0.9rem; margin-bottom: 1rem;">
+                Retrieve your profile information. Requires authentication.
+            </p>
+            <button class="btn btn-primary" onclick="getProfile()">Get My Profile</button>
+            <div class="response" id="profile-response"><pre></pre></div>
+        </div>
+
+        <!-- Update Profile -->
+        <div class="card">
+            <div class="card-title">
+                Update Profile
+                <span class="method-badge method-put">PUT</span>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">First Name</label>
+                    <input type="text" class="form-input" id="update-fname" placeholder="John">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Last Name</label>
+                    <input type="text" class="form-input" id="update-lname" placeholder="Doe">
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Phone</label>
+                <input type="tel" class="form-input" id="update-phone" placeholder="+1234567890">
+            </div>
+            <button class="btn btn-primary" onclick="updateProfile()">Update Profile</button>
+            <div class="response" id="update-response"><pre></pre></div>
+        </div>
+
+        <!-- Forgot Password -->
+        <div class="card">
+            <div class="card-title">
+                Forgot Password
+                <span class="method-badge method-post">POST</span>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Email Address</label>
+                <input type="email" class="form-input" id="forgot-email" placeholder="user@example.com">
+            </div>
+            <button class="btn btn-secondary" onclick="forgotPassword()">Request Reset Token</button>
+            <div class="response" id="forgot-response"><pre></pre></div>
+        </div>
+
+        <!-- Reset Password -->
+        <div class="card">
+            <div class="card-title">
+                Reset Password
+                <span class="method-badge method-post">POST</span>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Reset Token</label>
+                <input type="text" class="form-input" id="reset-token" placeholder="Token from email">
+            </div>
+            <div class="form-group">
+                <label class="form-label">New Password</label>
+                <input type="password" class="form-input" id="reset-password" placeholder="••••••••">
+            </div>
+            <button class="btn btn-primary" onclick="resetPassword()">Reset Password</button>
+            <div class="response" id="reset-response"><pre></pre></div>
+        </div>
+
+        <!-- Change Password -->
+<div class="card">
+    <div class="card-title">
+        Change Password
+        <span class="method-badge method-put">PUT</span>
+    </div>
+
+    <!-- Note: token field used only for token-based reset (calls /reset-password). 
+         If left blank, we'll perform the authenticated change-password call. -->
+    <div class="form-group">
+        <label class="form-label">Reset Token (optional)</label>
+        <input type="text" class="form-input" id="change-token" placeholder="Token from email (leave empty if changing while logged in)">
+    </div>
+
+    <div class="form-group">
+        <label class="form-label">Current / Old Password</label>
+        <input type="password" class="form-input" id="change-current" placeholder="••••••••">
+    </div>
+    <div class="form-group">
+        <label class="form-label">New Password</label>
+        <input type="password" class="form-input" id="change-new" placeholder="••••••••">
+    </div>
+    <button class="btn btn-primary" onclick="changePassword()">Change Password</button>
+    <div class="response" id="change-response"><pre></pre></div>
+</div>
+ge-response"><pre></pre></div>
+        </div>
+
+        <!-- Activity History -->
+        <div class="card">
+            <div class="card-title">
+                Login Activity
+                <span class="method-badge method-get">GET</span>
+            </div>
+            <p style="color: var(--muted); font-size: 0.9rem; margin-bottom: 1rem;">
+                View your recent login history and activity.
+            </p>
+            <button class="btn btn-secondary" onclick="getActivity()">View Activity</button>
+            <div class="response" id="activity-response"><pre></pre></div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:3001/api/auth';
+        let token = localStorage.getItem('auth_token') || '';
+
+        // Update status on load
+        updateAuthStatus();
+
+        function updateAuthStatus() {
+            const dot = document.getElementById('auth-status');
+            const text = document.getElementById('auth-status-text');
+            if (token) {
+                dot.classList.add('online');
+                text.textContent = 'Logged in';
+            } else {
+                dot.classList.remove('online');
+                text.textContent = 'Not logged in';
+            }
+        }
+
+        function showResponse(id, data, success) {
+            const el = document.getElementById(id);
+            el.style.display = 'block';
+            el.className = 'response ' + (success ? 'success' : 'error');
+            el.querySelector('pre').textContent = JSON.stringify(data, null, 2);
+        }
+
+        async function api(endpoint, method = 'GET', body = null) {
+            const options = {
+                method,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                }
+            };
+            if (body) options.body = JSON.stringify(body);
+            
+            try {
+                const res = await fetch(API_URL + endpoint, options);
+                return await res.json();
+            } catch (err) {
+                return { success: false, message: err.message };
+            }
+        }
+
+        async function login() {
+            const data = await api('/login', 'POST', {
+                email: document.getElementById('login-email').value,
+                password: document.getElementById('login-password').value
+            });
+            
+            if (data.success && data.token) {
+                token = data.token;
+                localStorage.setItem('auth_token', token);
+                updateAuthStatus();
+            }
+            showResponse('login-response', data, data.success);
+        }
+
+        function logout() {
+            token = '';
+            localStorage.removeItem('auth_token');
+            updateAuthStatus();
+            showResponse('login-response', { success: true, message: 'Logged out' }, true);
+        }
+
+        async function register() {
+            const data = await api('/register', 'POST', {
+                firstName: document.getElementById('reg-fname').value,
+                lastName: document.getElementById('reg-lname').value,
+                email: document.getElementById('reg-email').value,
+                password: document.getElementById('reg-password').value,
+                phone: document.getElementById('reg-phone').value
+            });
+            showResponse('register-response', data, data.success);
+        }
+
+        async function getProfile() {
+            const data = await api('/profile');
+            showResponse('profile-response', data, data.success);
+        }
+
+        async function updateProfile() {
+            const data = await api('/profile', 'PUT', {
+                firstName: document.getElementById('update-fname').value,
+                lastName: document.getElementById('update-lname').value,
+                phone: document.getElementById('update-phone').value
+            });
+            showResponse('update-response', data, data.success);
+        }
+
+        async function forgotPassword() {
+            const data = await api('/forgot-password', 'POST', {
+                email: document.getElementById('forgot-email').value
+            });
+            showResponse('forgot-response', data, data.success);
+        }
+
+        async function resetPassword() {
+            const data = await api('/reset-password', 'POST', {
+                token: document.getElementById('reset-token').value,
+                newPassword: document.getElementById('reset-password').value
+            });
+            showResponse('reset-response', data, data.success);
+        }
+
+async function changePassword() {
+    const tokenInput = document.getElementById('change-token').value.trim();
+    const oldPwd = document.getElementById('change-current').value;
+    const newPwd = document.getElementById('change-new').value;
+
+    if (!newPwd) {
+        showResponse('change-response', { success: false, message: 'New password is required' }, false);
+        return;
+    }
+
+    // Token-based reset (use backend /reset-password)
+    if (tokenInput) {
+        const data = await api('/reset-password', 'POST', {
+            token: tokenInput,
+            newPassword: newPwd
+        });
+        showResponse('change-response', data, data.success);
+        return;
+    }
+
+    // Authenticated change-password (send oldPassword as backend expects)
+    if (!oldPwd) {
+        showResponse('change-response', { success: false, message: 'Current/old password is required when not using a reset token' }, false);
+        return;
+    }
+
+    const data = await api('/change-password', 'PUT', {
+        oldPassword: oldPwd,
+        newPassword: newPwd
+    });
+    showResponse('change-response', data, data.success);
+}
+
+        async function getActivity() {
+            const data = await api('/activity');
+            showResponse('activity-response', data, data.success);
+        }
+    </script>
+</body>
+</html>
